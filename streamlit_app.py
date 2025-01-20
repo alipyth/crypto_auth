@@ -21,8 +21,6 @@ font-family: 'Noto Sans Arabic', sans-serif;
 # فایل JSON برای ذخیره‌سازی داده‌ها
 db_filename = 'users.json'
 
-
-# Helper function to generate keys
 def generate_key_pair():
     private_key = rsa.generate_private_key(
         public_exponent=65537,
@@ -32,7 +30,6 @@ def generate_key_pair():
     return private_key, public_key
 
 
-# Helper function to serialize keys
 def serialize_key(key, is_private=False):
     if is_private:
         return key.private_bytes(
@@ -47,7 +44,7 @@ def serialize_key(key, is_private=False):
         ).decode()
 
 
-# Helper function to load the database from JSON file
+
 def load_db():
     try:
         with open(db_filename, 'r') as f:
@@ -56,19 +53,17 @@ def load_db():
         return {}
 
 
-# Helper function to save the database to JSON file
+
 def save_db(db):
     with open(db_filename, 'w') as f:
         json.dump(db, f)
 
 
-# Home page
 def home():
     st.title("🔑 احراز هویت امن")
     st.info(" By Ali Jahani")
 
 
-# Registration page
 def register():
     st.title("📝 ثبت نام")
     st.caption('این بخش مربوط به ساخت شناسه کاربری هست ، با این شناسه کاربری میتوانید وارد سیستم شوید !')
@@ -78,24 +73,19 @@ def register():
         if st.button("تولید کلید خصوصی"):
             private_key, public_key = generate_key_pair()
 
-            # Load existing database or create new one
             db = load_db()
 
-            # Save public key to the database
             db[user_id] = serialize_key(public_key)
 
-            # Save the updated database to JSON file
             save_db(db)
 
             st.success(f"ثبت نام انجام شد ، شناسه کاربری شما: {user_id}")
-            # st.text_area("کلید عمومی برای سرور :", db[user_id], height=200)
             st.text_area("کلید خصوصی ورود شما (آن را ذخیره کنید):", serialize_key(private_key, is_private=True), height=200)
 
     else:
         st.warning("لطفا حتما یک شناسه کاربری وارد کنید و اینتر کنید")
 
 
-# Login page
 def login():
     st.title("🔓 ورود")
 
@@ -103,15 +93,11 @@ def login():
     private_key_pem = st.text_area("کلید خصوصی را وارد کنید:", height=200)
 
     if st.button("احراز هویت"):
-        # Load the database from JSON file
         db = load_db()
 
         if user_id in db:
             try:
-                # Load private key
                 private_key = serialization.load_pem_private_key(private_key_pem.encode(), password=None)
-
-                # Generate a temporary message for authentication
                 message = b"authentication_request"
                 signature = private_key.sign(
                     message,
@@ -121,8 +107,6 @@ def login():
                     ),
                     SHA256()
                 )
-
-                # Verify the signature with the stored public key
                 stored_public_key = serialization.load_pem_public_key(db[user_id].encode())
                 stored_public_key.verify(
                     signature,
@@ -134,27 +118,24 @@ def login():
                     SHA256()
                 )
 
-                # Store user ID in session state to indicate successful login
                 st.session_state.user_id = user_id
                 st.success("شما احراز هویت شدید :) خوش آمدید !")
 
             except Exception as e:
-                st.error("Authentication failed. Ensure your private key is correct.")
-                st.error(f"Error: {e}")
+                st.error("کلید خصوصی شما معتبر نیست !کلید خصوصی را کامل کپی کنید")
+                st.error(f"مشکلی وجود دارد: {e}")
         else:
             st.error("شناسه کاربری پیدا نشد ! لطفا ابتدا ثبت نام کنید")
 
 
-# Special page for logged-in users
 def special():
     if 'user_id' in st.session_state:
-        st.title("🌟 Special Page")
-        st.write(f"Hello {st.session_state.user_id}! This program is only available to registered users.")
+        st.title("🌟 صفحه مخصوص")
+        st.write(f"سلام ! {st.session_state.user_id}! اگه این صفحه رو میبینی یعنی با موفقیت وارد سیستم شدی:)")
     else:
-        st.warning("You must be logged in to access this page.")
+        st.warning("برای دسترسی به این صفحه باید لاگین کنید")
 
 
-# Main app
 def main():
     st.sidebar.title("منو")
     options = [ "ثبت نام", "ورود"]
