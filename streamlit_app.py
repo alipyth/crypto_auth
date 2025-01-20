@@ -80,6 +80,7 @@ def register():
             save_db(db)
 
             st.success(f"ثبت نام انجام شد ، شناسه کاربری شما: {user_id}")
+            st.text_area("کلید عمومی برای سرور :", db[user_id], height=200)
             st.text_area("کلید خصوصی ورود شما (آن را ذخیره کنید):", serialize_key(private_key, is_private=True), height=200)
 
     else:
